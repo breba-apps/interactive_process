@@ -1,5 +1,5 @@
+from ptyprocess import PtyProcessUnicode
 import platform
-import subprocess
 from select import select
 
 class TerminatedProcessError(Exception):
@@ -8,29 +8,18 @@ class TerminatedProcessError(Exception):
 class ReadWriteError(Exception):
     pass
 
-def read_fd(readable_fds, fd_to_read):
-    try:
-        if fd_to_read in readable_fds:
-            data = fd_to_read.peek()
-            fd_to_read.read(len(data))  # move the cursor before decoding output
-            return data.decode()
-        return None  # just being explicit. None is returned if the fd is not readable
-    except OSError as e:
-        raise ReadWriteError(f"Failed to read from {fd_to_read.name} due to OSError") from e
 
 class InteractiveProcess:
-    def __init__(self):
+    def __init__(self, env={"PS1": ""}, echo=False):
         if platform.system() == 'Windows':
             shell = 'cmd.exe'
         else:
             shell = '/bin/bash'
-        self.process = subprocess.Popen(shell, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.process = PtyProcessUnicode.spawn([shell], env=env, echo=echo)
 
     def send_command(self, command):
         try:
-            command = f"{command}\n"
-            self.process.stdin.write(command.encode())
-            self.process.stdin.flush()
+            self.process.write(f"{command}\n")
         except OSError as e:
             raise ReadWriteError(f"Failed to write to stdin due to OSError") from e
 
@@ -40,23 +29,23 @@ class InteractiveProcess:
         the function returns
 
         :param timeout: timeout in seconds
-        :return: string output from the process stdout
+        :return: string output from the process
         :raise TimeoutError: if no data is read before timeout
         """
-        if self.process.poll() is not None:
-            raise TerminatedProcessError(f"Process is terminated with return code {self.process.returncode}")
-        readables, _, _ = select([self.process.stdout, self.process.stderr], [], [], timeout)
+        if not self.process.isalive():
+            raise TerminatedProcessError(f"Process is terminated with return code {self.process.status}")
+        readables, _, _ = select([self.process.fd], [], [], timeout)
 
         if readables:
-            std_out = read_fd(readables, self.process.stdout)
-            std_err = read_fd(readables, self.process.stderr)
-            return std_out, std_err
+            try:
+                return self.process.read()
+            except EOFError as e:
+                return ""
+            except OSError as e:
+                raise ReadWriteError(f"Failed to read due to OSError") from e
 
         raise TimeoutError(f"No data read before reaching timout of {timeout}s")
 
     def close(self):
-        self.process.stdin.close()
-        self.process.stdout.close()
-        self.process.stderr.close()
-        self.process.wait(1)
-        self.process.terminate()
+        if self.process.isalive():
+            self.process.terminate(force=True)
