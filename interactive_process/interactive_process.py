@@ -1,3 +1,4 @@
+import platform
 import subprocess
 from select import select
 
@@ -19,7 +20,11 @@ def read_fd(readable_fds, fd_to_read):
 
 class InteractiveProcess:
     def __init__(self):
-        self.process = subprocess.Popen('/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if platform.system() == 'Windows':
+            shell = 'cmd.exe'
+        else:
+            shell = '/bin/bash'
+        self.process = subprocess.Popen(shell, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def send_command(self, command):
         try:
