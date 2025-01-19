@@ -1,3 +1,5 @@
+import os
+
 from ptyprocess import PtyProcessUnicode
 import platform
 from select import select
@@ -10,7 +12,7 @@ class ReadWriteError(Exception):
 
 
 class InteractiveProcess:
-    def __init__(self, env={"PS1": "", "TERM": "xterm"}, echo=False):
+    def __init__(self, env={"PS1": "", "TERM": "dumb"}, echo=False):
         if platform.system() == 'Windows':
             shell = 'cmd.exe'
         else:
@@ -49,3 +51,21 @@ class InteractiveProcess:
     def close(self):
         if self.process.isalive():
             self.process.terminate(force=True)
+
+def main():
+    process = InteractiveProcess()
+
+    process.send_command("clear")
+    process.send_command("echo flush")
+    while True:
+        try:
+            flushed = process.read_nonblocking(0.001)  # clear buffer
+        except TimeoutError:
+            continue
+        else:
+            if "flush" in flushed:
+                print(flushed.encode())
+                break
+
+if __name__ == "__main__":
+    main()

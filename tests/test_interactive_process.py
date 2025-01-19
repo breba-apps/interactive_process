@@ -94,7 +94,8 @@ class TestInteractiveProcess:
 
 
     def test_read_nonblocking_clear_command(self):
-        self.process.send_command('clear && echo Completed 4e556f02-38a1-4eec-8e0c-2d8afcd37ae7')
+        self.process.send_command('clear')  # with "dumb" terminal clear command FAIL silently
+        self.process.send_command('echo Completed 4e556f02-38a1-4eec-8e0c-2d8afcd37ae7')
         time.sleep(1)
         value = self.process.read_nonblocking(1)
-        assert value.strip() == "\x1b[3J\x1b[H\x1b[2JCompleted 4e556f02-38a1-4eec-8e0c-2d8afcd37ae7"
+        assert value.strip() == "Completed 4e556f02-38a1-4eec-8e0c-2d8afcd37ae7"
