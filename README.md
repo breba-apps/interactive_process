@@ -1,5 +1,5 @@
 # Interactive Process &middot; [![PyPI version](https://img.shields.io/pypi/v/interactive-process.svg)](https://pypi.org/project/interactive-process/)
-[![workflow](https://github.com/breba-apps/interactive_process/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/breba-apps/interactive_process/actions/workflows/test.yaml?query=branch%3Amain)
+[![Test Automation](https://github.com/breba-apps/interactive_process/actions/workflows/test.yaml/badge.svg)](https://github.com/breba-apps/interactive_process/actions/workflows/test.yaml)
 
 A Python package that provides a simple interface to manage interactive shells using a pseudo-terminal. It wraps around [PtyProcessUnicode][ptyprocess-docs] to let you send commands, read outputs, handle timeouts, and gracefully terminate processes.
 
