@@ -1,5 +1,3 @@
-import os
-
 from ptyprocess import PtyProcessUnicode
 import platform
 from select import select
