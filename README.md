@@ -1,4 +1,5 @@
 # Interactive Process &middot; [![PyPI version](https://img.shields.io/pypi/v/interactive-process.svg)](https://pypi.org/project/interactive-process/)
+[![workflow](https://github.com/breba-apps/interactive_process/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/breba-apps/interactive_process/actions/workflows/test.yaml?query=branch%3Amain)
 
 A Python package that provides a simple interface to manage interactive shells using a pseudo-terminal. It wraps around [PtyProcessUnicode][ptyprocess-docs] to let you send commands, read outputs, handle timeouts, and gracefully terminate processes.
 
@@ -55,24 +56,24 @@ finally:
     proc.close()
 ```
 
-### Custom Environment Example
+### Debugging in a Container
 
-```python
-custom_env = {
-    "PS1": "",             # Sets a blank prompt
-    "TERM": "xterm-256color",
-    "MY_VAR": "CustomValue"
-}
+If you need to run in a container because you are having issues in a system other than your own, run the following commands from the package root directory.
 
-proc = InteractiveProcess(env=custom_env, echo=True)
-try:
-    proc.send_command("echo $MY_VAR")
-    output = proc.read_nonblocking(timeout=0.5)
-    print("Custom Environment Output:", output)
-except TimeoutError:
-    print("No output received within 0.5 seconds.")
-finally:
-    proc.close()
+**First build and start the container**
+```shell
+docker build -t my-poetry-image .
+
+docker run -it --rm \            
+  -v "$(pwd)":/usr/src/interactive-process \
+  my-poetry-image
+```
+**Then inside the container you will be able to run tests and an example**
+```shell
+poetry install
+
+poetry run pytest
+poetry run interactive-process
 ```
 
 ## API Reference
@@ -81,9 +82,9 @@ finally:
 
 **Constructor**
 ```python
-InteractiveProcess(env={"PS1": "", "TERM": "xterm"}, echo=False)
+InteractiveProcess(env={"PS1": "", "TERM": "dumb"}, echo=False)
 ```
-- **env** (dict): Environment variables for the subprocess. Default is `{"PS1": "", "TERM": "xterm"}`.
+- **env** (dict): Environment variables for the subprocess. Default is `{"PS1": "", "TERM": "dumb"}`.
 - **echo** (bool): Whether to echo commands in the console.
 
 **send_command(command)**
@@ -124,8 +125,6 @@ InteractiveProcess(env={"PS1": "", "TERM": "xterm"}, echo=False)
 ## License
 
 [MIT LICENSE](LICENSE)
-
-
 
 
 
