@@ -31,6 +31,7 @@ class TestInteractiveProcess:
     def test_stream_nonblocking(self):
         self.process.send_command("echo Hello")
 
+        time.sleep(1)
         output = self.process.read_nonblocking()
 
         assert output.strip() == "Hello"  # newline is part of echo command
