@@ -15,7 +15,7 @@ class InteractiveProcess:
             shell = 'cmd.exe'
         else:
             shell = '/bin/bash'
-        self.process = PtyProcessUnicode.spawn([shell], env=env, echo=echo)
+        self.process = PtyProcessUnicode.spawn([shell, '--noprofile', '--norc'], env=env, echo=echo)
 
     def send_command(self, command):
         try:
