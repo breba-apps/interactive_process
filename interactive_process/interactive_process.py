@@ -10,7 +10,7 @@ class ReadWriteError(Exception):
 
 
 class InteractiveProcess:
-    def __init__(self, env={"PS1": "", "TERM": "dumb"}, echo=False):
+    def __init__(self, env={"PS1": ""}, echo=False):
         if platform.system() == 'Windows':
             shell = 'cmd.exe'
         else:
@@ -38,7 +38,7 @@ class InteractiveProcess:
 
         if readables:
             try:
-                return self.process.read()
+                return self.process.read().replace("\r\n", "\n")
             except EOFError as e:
                 return ""
             except OSError as e:
