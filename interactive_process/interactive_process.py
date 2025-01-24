@@ -10,7 +10,7 @@ class ReadWriteError(Exception):
 
 
 class InteractiveProcess:
-    def __init__(self, env={"PS1": ""}, echo=False):
+    def __init__(self, env={"PS1": "", "TERM": "dumb"}, echo=False):
         if platform.system() == 'Windows':
             shell = 'cmd.exe'
         else:
