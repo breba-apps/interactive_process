@@ -1,3 +1,5 @@
+import os
+
 from ptyprocess import PtyProcessUnicode
 import platform
 from select import select
@@ -19,7 +21,7 @@ class InteractiveProcess:
 
     def send_command(self, command):
         try:
-            self.process.write(f"{command}\n")
+            self.process.write(f"{command}" + os.linesep)
         except OSError as e:
             raise ReadWriteError(f"Failed to write to stdin due to OSError") from e
 
