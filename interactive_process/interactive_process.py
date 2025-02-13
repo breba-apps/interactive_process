@@ -1,4 +1,5 @@
 import os
+import shlex
 
 from ptyprocess import PtyProcessUnicode
 import platform
@@ -19,11 +20,23 @@ class InteractiveProcess:
             shell = '/bin/bash'
         self.process = PtyProcessUnicode.spawn([shell, '--noprofile', '--norc'], env=env, echo=echo)
 
-    def send_command(self, command):
+    def send_command(self, command, end_marker=None):
         try:
-            self.process.write(f"{command}" + os.linesep)
+            escaped_command = shlex.quote(command)
+            echo_text = f"echo $ {escaped_command}"
+            self.process.write(echo_text + os.linesep)
+
+            if end_marker:
+                shell_command = f"{command} && echo {end_marker} || echo {end_marker}"
+                self.process.write(f"{shell_command}" + os.linesep)
+            else:
+                self.process.write(f"{command}" + os.linesep)
+
         except OSError as e:
             raise ReadWriteError(f"Failed to write to stdin due to OSError") from e
+
+    def send_input(self, input_text: str):
+        self.send_command(input_text, None)
 
     def read_nonblocking(self, timeout=0.1):
         """
