@@ -17,14 +17,14 @@ class TestInteractiveProcess:
     @pytest.fixture(autouse=True)
     def process(self):
         self.process = InteractiveProcess()
-        self.process.send_command("echo flush\n")
+        self.process.send_command("echo flush", "Completed flush")
         while True:
             try:
                 flushed = self.process.read_nonblocking(0.001)  # clear buffer
             except TimeoutError:
                 continue
             else:
-                if "flush" in flushed:
+                if "Completed flush" in flushed:
                     break
         return self.process
 
