@@ -42,28 +42,28 @@ class InteractiveProcess:
         except OSError as e:
             raise ReadWriteError(f"Failed to write to stdin due to OSError") from e
 
-    def read_to_prompt(self, inclusive = True, timeout=0.5):
-        if not self.shell_prompt:
-            raise Exception("Shell prompt is not set")
-
+    def read_to_text(self, text: str, inclusive = True, timeout=0.5):
         start_time = time.monotonic()
         output = ""
-        before = self.buffer
-        self.buffer = ""
         while True:
             try:
                 output += self.read_nonblocking(0.01)
-                index = output.find(self.shell_prompt)
+                index = output.find(text)
                 if index != -1:
                     if inclusive:
-                        index = index + len(self.shell_prompt)
+                        index = index + len(text)
                     self.buffer = output[index:]
-                    return before + output[:index]
+                    return output[:index]
             except TimeoutError as e:
                 if time.monotonic() - start_time > timeout:
                     self.buffer = output  # Just save the buffer, so that you can get it by calling read_nonblocking
                     raise e
                 continue
+
+    def read_to_prompt(self, inclusive = True, timeout=0.5):
+        if not self.shell_prompt:
+            raise Exception("Shell prompt is not set")
+        return self.read_to_text(self.shell_prompt, inclusive, timeout)
 
 
     def read_nonblocking(self, timeout=0.1):
