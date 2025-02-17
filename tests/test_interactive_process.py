@@ -17,8 +17,7 @@ class TestInteractiveProcess:
     @pytest.fixture(autouse=True)
     def process(self):
         self.process = InteractiveProcess(shell_prompt="testing$")
-        self.process.send_command("echo flush", "Completed flush")
-        flushed = self.process.read_to_text("Completed flush")
+        flushed = self.process.flush_output()
         print(f"\nFlushed before reading input:\n{flushed}")
         return self.process
 

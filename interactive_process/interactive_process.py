@@ -33,6 +33,10 @@ class InteractiveProcess:
 
         return cls(shell_prompt=prompt)
 
+    def flush_output(self):
+        self.process.write("echo flushed" + os.linesep)
+        return self.read_to_text("flushed" + os.linesep)
+
     def send_command(self, command, end_marker=None):
         try:
             escaped_command = shlex.quote(command)
@@ -56,6 +60,7 @@ class InteractiveProcess:
         except OSError as e:
             raise ReadWriteError(f"Failed to write to stdin due to OSError") from e
 
+    # TODO: need more tests for this
     def read_to_text(self, text: str, inclusive = True, timeout=0.5):
         start_time = time.monotonic()
         output = ""
