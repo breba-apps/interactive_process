@@ -36,7 +36,7 @@ class TestInteractiveProcess:
 
         assert output.strip() == "testing$ sleep 0.2 && echo Hello\nHello"
 
-    def test_stream_nonblocking_sleeping_command_timeout(self):
+    def test_read_nonblocking_sleeping_command_timeout(self):
         self.process.send_command("sleep 1 && echo Hello")
         time.sleep(0.2)
         echo = self.process.read_nonblocking(0.1)

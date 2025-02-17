@@ -55,7 +55,7 @@ class InteractiveProcess:
     def send_input(self, input_text: str):
         try:
             input_text = f"{input_text}" + os.linesep
-            self.buffer += input_text
+            self.buffer += input_text  # keep input in the buffer for the next read to pick it up
             self.process.write(f"{input_text}" + os.linesep)
         except OSError as e:
             raise ReadWriteError(f"Failed to write to stdin due to OSError") from e
