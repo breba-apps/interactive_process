@@ -16,34 +16,32 @@ def error_commands(request):
 class TestInteractiveProcess:
     @pytest.fixture(autouse=True)
     def process(self):
-        self.process = InteractiveProcess()
-        self.process.send_command("echo flush\n")
-        while True:
-            try:
-                flushed = self.process.read_nonblocking(0.001)  # clear buffer
-            except TimeoutError:
-                continue
-            else:
-                if "flush" in flushed:
-                    break
+        self.process = InteractiveProcess(shell_prompt="testing$")
+        flushed = self.process.flush_output()
+        print(f"\nFlushed before reading input:\n{flushed}")
         return self.process
 
-    def test_stream_nonblocking(self):
+    def test_read_nonblocking(self):
         self.process.send_command("echo Hello")
-
+        time.sleep(0.2)  # wait for output to show up in the terminal
         output = self.process.read_nonblocking(2)
 
-        assert output.strip() == "Hello"  # newline is part of echo command
+        assert output.strip() == "testing$ echo Hello\nHello"  # newline is part of echo command
 
-    def test_stream_nonblocking_sleeping_command(self):
+    def test_read_nonblocking_sleeping_command(self):
         self.process.send_command("sleep 0.2 && echo Hello")
+        time.sleep(0.3)
 
         output = self.process.read_nonblocking(2)
 
-        assert output.strip() == "Hello"
+        assert output.strip() == "testing$ sleep 0.2 && echo Hello\nHello"
 
-    def test_stream_nonblocking_sleeping_command_timeout(self):
+    def test_read_nonblocking_sleeping_command_timeout(self):
         self.process.send_command("sleep 1 && echo Hello")
+        time.sleep(0.2)
+        echo = self.process.read_nonblocking(0.1)
+        assert echo.strip() == "testing$ sleep 1 && echo Hello"
+        time.sleep(0.3)
 
         with pytest.raises(TimeoutError):
             self.process.read_nonblocking(0.1)
@@ -57,21 +55,24 @@ class TestInteractiveProcess:
 
     def test_read_with_intput_response(self):
         self.process.send_command('read -p "Please enter your name: " user_name')
+        time.sleep(0.1)
         prompt = self.process.read_nonblocking(0.1)
-        assert prompt == "Please enter your name: "
+        assert prompt.strip() == """testing$ read -p "Please enter your name: " user_name\nPlease enter your name:"""
         # Check for timeout after we read the prompt, maybe should be own test
         with pytest.raises(TimeoutError):
             self.process.read_nonblocking(0.01)
-        self.process.send_command('dog')
+        self.process.send_input('dog')
 
         self.process.send_command('echo $user_name')
+        time.sleep(0.1)
         output_result = self.process.read_nonblocking(0.1)
 
-        assert output_result.strip() == 'dog'
+        assert output_result.strip() == 'dog\ntesting$ echo $user_name\ndog'
 
     def test_read_std_err(self, error_commands):
         command, expect_output =error_commands
         self.process.send_command(command)
+        time.sleep(0.1)
 
         output = self.process.read_nonblocking(0.2)
 
@@ -96,6 +97,8 @@ class TestInteractiveProcess:
     def test_read_nonblocking_clear_command(self):
         self.process.send_command('clear')  # with "dumb" terminal clear command FAIL silently
         self.process.send_command('echo Completed 4e556f02-38a1-4eec-8e0c-2d8afcd37ae7')
-        time.sleep(1)
+        time.sleep(0.1)
         value = self.process.read_nonblocking(1)
-        assert value.strip() == "Completed 4e556f02-38a1-4eec-8e0c-2d8afcd37ae7"
+        assert value.strip() == ('testing$ clear\n'
+                                 'testing$ echo Completed 4e556f02-38a1-4eec-8e0c-2d8afcd37ae7\n'
+                                 'Completed 4e556f02-38a1-4eec-8e0c-2d8afcd37ae7')
